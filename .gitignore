@@ -220,3 +220,15 @@ __marimo__/
 # Custom Data Rules
 data/
 *.zip
+
+# Machine Learning Models / Weights
+models/
+*.pt
+*.pth
+*.h5
+*.onnx
+*.bin
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
