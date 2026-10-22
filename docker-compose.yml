@@ -1,0 +1,24 @@
+services:
+  api:
+    build: .
+    container_name: fake-news-api
+    command: uvicorn backend.app:app --host 0.0.0.0 --port 8000
+    ports:
+      - "8000:8000"
+    environment:
+      MODEL_PATH: ./models/phobert-fake-news
+      BACKEND_PORT: 8000
+    restart: unless-stopped
+
+  ui:
+    build: .
+    container_name: fake-news-ui
+    command: streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8501
+    ports:
+      - "8501:8501"
+    environment:
+      API_URL: http://api:8000/predict
+      UI_PORT: 8501
+    depends_on:
+      - api
+    restart: unless-stopped
