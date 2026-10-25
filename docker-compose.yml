@@ -6,7 +6,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      MODEL_PATH: ./models/phobert-fake-news
+      MODEL_PATH: ${MODEL_PATH:-vinai/phobert-base}
       BACKEND_PORT: 8000
     restart: unless-stopped
 
