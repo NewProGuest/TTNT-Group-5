@@ -1,91 +1,41 @@
-# Hướng dẫn sử dụng
+# Báo cáo tổng kết dự án
 
-## 1. Cài đặt môi trường
+## 1. Tóm tắt
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-```
+Dự án TTNT-Group-5 xây dựng một hệ thống phát hiện tin giả trên mạng xã hội, tập trung vào triển khai mô hình ngôn ngữ tiếng Việt dạng PhoBERT theo kiến trúc đơn giản nhưng có thể demo và triển khai. Phiên bản này đã được hoàn thiện theo hướng prototype: có backend FastAPI để phục vụ inference, giao diện Streamlit để thử nghiệm trực quan, và cấu hình Docker để chạy nhanh trên máy local.
 
-Nếu dùng Windows PowerShell:
+## 2. Kiến trúc hệ thống
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-```
+- Backend: FastAPI
+  - Endpoint `/predict` để nhận văn bản đầu vào
+  - Endpoint `/health` để kiểm tra trạng thái hệ thống
+  - Tự động nạp mô hình PhoBERT từ đường dẫn cục bộ hoặc từ Hugging Face khi không có checkpoint nội bộ
 
-## 2. Cấu hình biến môi trường
+- Frontend: Streamlit
+  - Hỗ trợ nhập nội dung bài đăng
+  - Hiển thị nhãn (`Tin thật` / `Tin giả`) và độ tin cậy
+  - Giao diện cảnh báo khi backend đang ở chế độ demo fallback
 
-Tạo file `.env` dựa trên `.env.example`:
+- Mô hình: PhoBERT / AutoModelForSequenceClassification
+  - Có thể chạy trên CPU hoặc GPU tùy cấu hình máy chủ
+  - Dùng `vinai/phobert-base` làm mẫu mặc định để demo, hoặc nhận `MODEL_PATH` nếu có checkpoint cụ thể
 
-```bash
-cp .env.example .env
-```
+## 3. Quy trình triển khai
 
-Các biến quan trọng:
+1. Chuẩn bị văn bản đầu vào từ bài đăng mạng xã hội.
+2. Gửi request JSON tới FastAPI backend.
+3. Backend tokenizes và chạy mô hình trên CPU/GPU.
+4. Mô hình trả về xác suất của từng nhãn.
+5. Streamlit hiển thị kết quả rõ ràng cho người dùng.
 
-- `MODEL_PATH`: đường dẫn đến checkpoint PhoBERT của bạn. Nếu không cung cấp, hệ thống sẽ thử dùng mô hình từ Hugging Face hoặc chạy ở chế độ dự phòng.
-- `BACKEND_PORT`: cổng cho FastAPI (mặc định 8000)
-- `UI_PORT`: cổng cho Streamlit (mặc định 8501)
+## 4. Ưu điểm giải pháp
 
-## 3. Khởi chạy backend
+- Dễ mở rộng cho mô hình mới và nhánh phân loại khác nhau.
+- Tách riêng tầng inference và tầng UI, giúp quản lý mã nguồn hiệu quả hơn.
+- Có thể chạy cục bộ hoặc trên Docker, thuận lợi cho triển khai thực tế.
+- Có chế độ fallback khi checkpoint chưa được cung cấp, giúp demo không bị dừng.
+- Theo mặc định, hệ thống có thể thử nghiệm với mô hình PhoBERT cơ bản từ Hugging Face mà không cần checkpoint nội bộ.
 
-```bash
-uvicorn backend.app:app --host 0.0.0.0 --port 8000
-```
+## 5. Kết luận
 
-Truy cập API tại:
-
-- `http://localhost:8000/health`
-- `http://localhost:8000/docs`
-
-## 4. Khởi chạy giao diện người dùng
-
-```bash
-streamlit run streamlit_app.py --server.address 0.0.0.0 --server.port 8501
-```
-
-Truy cập giao diện tại:
-
-- `http://localhost:8501`
-
-## 5. Gửi request mẫu tới API
-
-```bash
-curl -X POST "http://localhost:8000/predict" \
-  -H "Content-Type: application/json" \
-  -d '{"text":"Chính phủ vừa công bố chính sách hỗ trợ người lao động sau thiên tai."}'
-```
-
-Ví dụ response:
-
-```json
-{
-  "label": "Tin thật",
-  "confidence": 0.93,
-  "probability": {
-    "tin_that": 0.93,
-    "tin_gia": 0.07
-  },
-  "source": "model"
-}
-```
-
-## 6. Chạy bằng Docker Compose
-
-```bash
-docker compose up --build
-```
-
-Sau đó truy cập:
-
-- Backend: `http://localhost:8000/docs`
-- UI: `http://localhost:8501`
-
-## 7. Lưu ý về mô hình
-
-Repo hiện chưa chứa checkpoint PhoBERT đã huấn luyện. Để triển khai thực tế, hãy đặt mô hình vào thư mục `models/phobert-fake-news` hoặc cung cấp URL mô hình trên Hugging Face qua biến môi trường `MODEL_PATH`.
-
-Nếu không có checkpoint, ứng dụng vẫn chạy ở chế độ dự phòng và trả về kết quả dựa trên các heuristic để demo kỹ năng tích hợp hệ thống.
+Hệ thống đã được hoàn thiện theo hướng demo/prototype với backend, UI và cấu trúc triển khai rõ ràng. Phiên bản hiện tại sẵn sàng để chạy và thử nghiệm trên máy local, đồng thời có thể nâng cấp lên mô hình huấn luyện nội bộ khi có checkpoint chính thức.
